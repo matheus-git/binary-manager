@@ -1,14 +1,12 @@
 #[derive(Debug)]
 pub struct EShoff {
     pub raw: [u8; 8],
-    pub describe: String
 }
 
 impl EShoff {
     pub fn new(raw: [u8; 8]) -> Self {
         Self { 
             raw, 
-            describe: "".to_string() 
         }
     }
 }

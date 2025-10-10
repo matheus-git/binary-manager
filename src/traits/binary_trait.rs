@@ -3,5 +3,5 @@ pub trait BinaryTrait {
     type ProgramHeader;
 
     fn get_header(&self) -> &Self::Header;
-    fn get_program_headers(&self) -> &[&Self::ProgramHeader];
+    fn get_program_headers(&self) -> &[Self::ProgramHeader];
 }

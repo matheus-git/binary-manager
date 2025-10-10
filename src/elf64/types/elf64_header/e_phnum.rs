@@ -1,0 +1,14 @@
+#[derive(Debug)]
+pub struct EPhnum {
+    pub raw: [u8; 2],
+    pub describe: String
+}
+
+impl EPhnum {
+    pub fn new(raw: [u8; 2]) -> Self {
+        Self { 
+            raw, 
+            describe: "".to_string() 
+        }
+    }
+}

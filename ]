@@ -90,7 +90,7 @@ pub struct EIdent {
 impl EIdent {
     pub fn new(raw: [u8; 16]) -> Self {
 
-        let as_hex = bytes_to_hex(&raw);
+        let as_hex = bytes_to_hex(raw);
 
         Self { 
             raw, 

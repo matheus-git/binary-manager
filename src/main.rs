@@ -1,5 +1,6 @@
 mod elf64;
 mod traits;
+mod utils;
 
 use elf64::Elf64Binary;
 

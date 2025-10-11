@@ -28,7 +28,8 @@ use e_shstrndx::EShstrndx;
 use e_type::EType;
 use e_version::EVersion;
 
-use crate::elf64::loaders::load_elf64_header::LoadELF64Header;
+use crate::{elf64::loaders::load_elf64_header::LoadELF64Header, traits::header_field::HeaderField};
+use crate::utils::endian::Endian;
 
 #[derive(Debug)]
 pub struct Elf64Header {
@@ -50,12 +51,17 @@ pub struct Elf64Header {
 
 impl Elf64Header {
     pub fn new(load: &LoadELF64Header) -> Self {
+        let e_ident = EIdent::new(load.e_ident);
+        let endian: Endian = e_ident.endian();
+
+        println!("{}", EVersion::new(load.e_version, &endian).value);
+
         Self { 
-            e_ident: EIdent::new(load.e_ident),
-            e_type: EType::new(load.e_type),
-            e_machine: EMachine::new(load.e_machine),
-            e_version: EVersion::new(load.e_version),
-            e_entry: EEntry::new(load.e_entry),
+            e_ident,
+            e_type: EType::new(load.e_type, &endian),
+            e_machine: EMachine::new(load.e_machine, &endian),
+            e_version: EVersion::new(load.e_version, &endian),
+            e_entry: EEntry::new(load.e_entry, &endian),
             e_phoff: EPhoff::new(load.e_phoff),
             e_shoff: EShoff::new(load.e_shoff),
             e_flags: EFlags::new(load.e_flags),

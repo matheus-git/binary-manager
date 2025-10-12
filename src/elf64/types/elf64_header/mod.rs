@@ -28,7 +28,7 @@ use e_shstrndx::EShstrndx;
 use e_type::EType;
 use e_version::EVersion;
 
-use crate::{elf64::loaders::load_elf64_header::LoadELF64Header, traits::header_field::HeaderField};
+use crate::elf64::loaders::load_elf64_header::LoadELF64Header;
 use crate::utils::endian::Endian;
 
 #[derive(Debug)]
@@ -54,23 +54,21 @@ impl Elf64Header {
         let e_ident = EIdent::new(load.e_ident);
         let endian: Endian = e_ident.endian();
 
-        println!("{}", EVersion::new(load.e_version, &endian).value);
-
         Self { 
             e_ident,
             e_type: EType::new(load.e_type, &endian),
             e_machine: EMachine::new(load.e_machine, &endian),
             e_version: EVersion::new(load.e_version, &endian),
             e_entry: EEntry::new(load.e_entry, &endian),
-            e_phoff: EPhoff::new(load.e_phoff),
-            e_shoff: EShoff::new(load.e_shoff),
-            e_flags: EFlags::new(load.e_flags),
-            e_ehsize: EEhsize::new(load.e_ehsize),
-            e_phentsize: EPhentsize::new(load.e_phentsize),
-            e_phnum: EPhnum::new(load.e_phnum),
-            e_shentsize: EShentsize::new(load.e_shentsize),
-            e_shnum: EShnum::new(load.e_shnum),
-            e_shstrndx: EShstrndx::new(load.e_shstrndx)
+            e_phoff: EPhoff::new(load.e_phoff, &endian),
+            e_shoff: EShoff::new(load.e_shoff, &endian),
+            e_flags: EFlags::new(load.e_flags, &endian),
+            e_ehsize: EEhsize::new(load.e_ehsize, &endian),
+            e_phentsize: EPhentsize::new(load.e_phentsize, &endian),
+            e_phnum: EPhnum::new(load.e_phnum, &endian),
+            e_shentsize: EShentsize::new(load.e_shentsize, &endian),
+            e_shnum: EShnum::new(load.e_shnum, &endian),
+            e_shstrndx: EShstrndx::new(load.e_shstrndx, &endian)
         }
     }
 }

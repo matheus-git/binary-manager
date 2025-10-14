@@ -3,6 +3,7 @@ mod types;
 
 use loaders::load_elf64_header::LoadELF64Header;
 use loaders::load_elf64_program_header::LoadELF64ProgramHeader;
+use loaders::load_elf64_section_header::LoadELF64SectionHeader;
 
 use types::elf64_header::Elf64Header;
 use types::elf64_program_header::Elf64ProgramHeader;
@@ -36,9 +37,9 @@ impl Elf64Binary {
         for i in 0..elf_header.e_shnum.value as usize {
             let start: usize = elf_header.e_shoff.value as usize + (elf_header.e_shentsize.value as usize * i);
             let end: usize = start + elf_header.e_shentsize.value as usize;
-            let load_elf_programs_header = LoadELF64ProgramHeader::from_bytes(&buf[start..end]);
-            let elf64_program_header = Elf64ProgramHeader::new(load_elf_programs_header, &endian);
-            programs_header.push(elf64_program_header);
+            let load_elf_sections_header = LoadELF64SectionHeader::from_bytes(&buf[start..end]);
+            let elf64_program_header = Elf64SectionHeader::new(load_elf_sections_header, &endian);
+            sections_header.push(elf64_program_header);
         }
 
         Self { 

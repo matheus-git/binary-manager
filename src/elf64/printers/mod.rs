@@ -39,7 +39,7 @@ impl BinaryPrinter for Elf64Printer {
         ];
 
         let table_config = Settings::default()
-            .with(Style::ascii());
+            .with(Style::modern());
         let table = Table::new(fields).with(table_config).to_string();
         println!("{}", table);
     }
@@ -58,7 +58,7 @@ impl BinaryPrinter for Elf64Printer {
         }
 
         let table_config = Settings::default()
-            .with(Style::ascii());
+            .with(Style::modern());
 
         let mut fields: Vec<ProgramHeaderFields> = Vec::with_capacity(phs.len());
 
@@ -98,7 +98,7 @@ impl BinaryPrinter for Elf64Printer {
         }
 
         let table_config = Settings::default()
-            .with(Style::ascii());
+            .with(Style::modern());
 
         let mut fields: Vec<SectionHeaderFields> = Vec::with_capacity(shs.len());
 

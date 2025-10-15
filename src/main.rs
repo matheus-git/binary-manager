@@ -3,6 +3,9 @@ mod traits;
 mod utils;
 
 use elf64::Elf64Binary;
+use elf64::printers::Elf64Printer;
+use traits::binary_printer::BinaryPrinter;
+use traits::binary_trait::Binary;
 
 use std::fs;
 use std::io;
@@ -12,7 +15,9 @@ fn main() -> io::Result<()> {
     let bytes: Vec<u8> = fs::read(path)?;
 
     let binary = Elf64Binary::new(&bytes);
-    let sections = binary.get_section_headers();
-    println!("{:?}", sections);
+
+    let printer: Elf64Printer = Elf64Printer; 
+    printer.print_header(binary.get_header());
+    //println!("{:?}", sections);
     Ok(())
 }

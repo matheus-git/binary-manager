@@ -1,6 +1,6 @@
 mod loaders;
 mod types;
-mod printers;
+pub mod printers;
 
 use loaders::load_elf64_header::LoadELF64Header;
 use loaders::load_elf64_program_header::LoadELF64ProgramHeader;

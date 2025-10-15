@@ -18,6 +18,8 @@ fn main() -> io::Result<()> {
 
     let printer: Elf64Printer = Elf64Printer; 
     printer.print_header(binary.get_header());
+    printer.print_program_headers(binary.get_program_headers());
+    printer.print_section_headers(binary.get_section_headers());
     //println!("{:?}", sections);
     Ok(())
 }

@@ -8,7 +8,7 @@ The -h flag is available for any usability questions.
 
 ## Example
 
-![screenshot_list](https://raw.githubusercontent.com/matheus-git/systemd-manager-tui/main/assets/systemd-manager-tui.gif)
+![section_headers_screenshot](https://github.com/matheus-git/binary-manager/blob/main/assets/section_headers_screenshot.png?raw=true)
 
 ## Install
 

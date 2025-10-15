@@ -1,4 +1,4 @@
-pub trait BinaryTrait {
+pub trait Binary {
     type Header;
     type ProgramHeader;
     type SectionHeader;

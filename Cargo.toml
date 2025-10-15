@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 plain = "0.2.3"
+tabled = "0.20.0"

@@ -6,7 +6,8 @@ use crate::utils::endian::Endian;
 pub struct ShName {
     pub raw: [u8; 4],
     pub value: u32,
-    pub as_hex: String
+    pub as_hex: String,
+    pub name: String
 }
 
 impl ShName {
@@ -18,13 +19,18 @@ impl ShName {
         Self { 
             raw, 
             value,
-            as_hex
+            as_hex,
+            name: String::new()
         }
+    }
+
+    pub fn update_name(&mut self, name: String){
+        self.name = name;
     }
 }
 
 impl HeaderField for ShName {
     fn describe(&self) -> String {
-        self.value.to_string()
+        self.name.clone()
     }
-}
+}   

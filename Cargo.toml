@@ -3,6 +3,9 @@ name = "binary-manager"
 authors = ["Matheus-git <mathiew0@gmail.com>"]
 version = "0.1.0"
 edition = "2024"
+exclude = [
+    "assets/*",
+]
 
 [dependencies]
 plain = "0.2.3"

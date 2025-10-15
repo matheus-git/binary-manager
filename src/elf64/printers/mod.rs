@@ -17,30 +17,30 @@ impl BinaryPrinter for Elf64Printer {
         #[derive(Tabled)]
         struct HeaderField<'a> {
             name: &'a str,
-            value: &'a str,
             describe: String,
         }
 
         let fields = vec![
-            HeaderField { name: "e_ident", value: &header.e_ident.as_hex, describe: header.e_ident.describe() },
-            HeaderField { name: "e_type", value: &header.e_type.as_hex, describe: header.e_type.describe() },
-            HeaderField { name: "e_machine", value: &header.e_machine.as_hex, describe: header.e_machine.describe() },
-            HeaderField { name: "e_version", value: &header.e_version.as_hex, describe: header.e_version.describe() },
-            HeaderField { name: "e_entry", value: &header.e_entry.as_hex, describe: header.e_entry.describe() },
-            HeaderField { name: "e_phoff", value: &header.e_phoff.as_hex, describe: header.e_phoff.describe() },
-            HeaderField { name: "e_shoff", value: &header.e_shoff.as_hex, describe: header.e_shoff.describe() },
-            HeaderField { name: "e_flags", value: &header.e_flags.as_hex, describe: header.e_flags.describe() },
-            HeaderField { name: "e_ehsize", value: &header.e_ehsize.as_hex, describe: header.e_ehsize.describe() },
-            HeaderField { name: "e_phentsize", value: &header.e_phentsize.as_hex, describe: header.e_phentsize.describe() },
-            HeaderField { name: "e_phnum", value: &header.e_phnum.as_hex, describe: header.e_phnum.describe() },
-            HeaderField { name: "e_shentsize", value: &header.e_shentsize.as_hex, describe: header.e_shentsize.describe() },
-            HeaderField { name: "e_shnum", value: &header.e_shnum.as_hex, describe: header.e_shnum.describe() },
-            HeaderField { name: "e_shstrndx", value: &header.e_shstrndx.as_hex, describe: header.e_shstrndx.describe() },
+            HeaderField { name: "e_ident",  describe: header.e_ident.describe() },
+            HeaderField { name: "e_type",  describe: header.e_type.describe() },
+            HeaderField { name: "e_machine",  describe: header.e_machine.describe() },
+            HeaderField { name: "e_version",  describe: header.e_version.describe() },
+            HeaderField { name: "e_entry",  describe: header.e_entry.describe() },
+            HeaderField { name: "e_phoff",  describe: header.e_phoff.describe() },
+            HeaderField { name: "e_shoff",  describe: header.e_shoff.describe() },
+            HeaderField { name: "e_flags",  describe: header.e_flags.describe() },
+            HeaderField { name: "e_ehsize",  describe: header.e_ehsize.describe() },
+            HeaderField { name: "e_phentsize",  describe: header.e_phentsize.describe() },
+            HeaderField { name: "e_phnum",  describe: header.e_phnum.describe() },
+            HeaderField { name: "e_shentsize",  describe: header.e_shentsize.describe() },
+            HeaderField { name: "e_shnum",  describe: header.e_shnum.describe() },
+            HeaderField { name: "e_shstrndx",  describe: header.e_shstrndx.describe() },
         ];
 
         let table_config = Settings::default()
             .with(Style::modern());
         let table = Table::new(fields).with(table_config).to_string();
+        println!("Elf header:");
         println!("{}", table);
     }
 
@@ -79,6 +79,7 @@ impl BinaryPrinter for Elf64Printer {
 
         let table = Table::new(fields).with(table_config).to_string();
 
+        println!("\nProgram headers:");
         println!("{}", table);
     }
 
@@ -121,6 +122,7 @@ impl BinaryPrinter for Elf64Printer {
 
         let table = Table::new(fields).with(table_config).to_string();
 
+        println!("\nSection headers:");
         println!("{}", table);
     }
 }

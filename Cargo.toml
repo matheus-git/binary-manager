@@ -1,8 +1,10 @@
 [package]
 name = "binary-manager"
+authors = ["Matheus-git <mathiew0@gmail.com>"]
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
 plain = "0.2.3"
 tabled = "0.20.0"
+clap = { version = "4.3", features = ["derive"] }

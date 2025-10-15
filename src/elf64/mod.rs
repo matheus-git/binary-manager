@@ -1,5 +1,5 @@
 mod loaders;
-mod types;
+pub mod types;
 pub mod printers;
 
 use loaders::load_elf64_header::LoadELF64Header;
@@ -9,7 +9,7 @@ use loaders::load_elf64_section_header::LoadELF64SectionHeader;
 use types::elf64_header::Elf64Header;
 use types::elf64_program_header::Elf64ProgramHeader;
 use types::elf64_section_header::Elf64SectionHeader;
-use crate::traits::binary_trait::Binary;
+use crate::traits::binary::Binary;
 use crate::utils::endian::Endian;
 use crate::utils::string_until_null::string_until_null;
 

@@ -15,7 +15,7 @@ pub enum ShTypeValue {
     NoBits,
     Rel,
     DynSym,
-    Other(u32), 
+    Other(()), 
 }
 
 impl ShTypeValue {
@@ -32,7 +32,7 @@ impl ShTypeValue {
             8 => ShTypeValue::NoBits,
             9 => ShTypeValue::Rel,
             11 => ShTypeValue::DynSym,
-            other => ShTypeValue::Other(other),
+            _ => ShTypeValue::Other(()),
         }
     }
 

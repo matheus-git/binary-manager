@@ -23,7 +23,7 @@ The -h flag is available for any usability questions.
 
 ## Updates and Contributing
 
-This is a work-in-progress project; new features will be added over time. If you want to contribute, you can add support for other formats, such as PE or ELF32, or create an issue suggesting a feature you'd like to implement.
+This is a work-in-progress project, new features will be added over time. If you want to contribute, you can add support for other formats, such as PE or ELF32, or create an issue suggesting a feature you'd like to implement.
 
 ## 📝 License
 

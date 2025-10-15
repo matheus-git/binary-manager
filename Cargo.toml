@@ -1,7 +1,9 @@
 [package]
 name = "binary-manager"
 authors = ["Matheus-git <mathiew0@gmail.com>"]
+description = "A binary parser"
 version = "0.1.0"
+license = "MIT"
 edition = "2024"
 exclude = [
     "assets/*",

@@ -3,8 +3,7 @@ use crate::traits::header_field::HeaderField;
 
 use super::types::{elf64_header::Elf64Header, elf64_program_header::Elf64ProgramHeader, elf64_section_header::Elf64SectionHeader};
 use tabled::{Table, Tabled};
-use tabled::settings::{Settings, Style, Padding};
-use tabled::builder::Builder;
+use tabled::settings::{Settings, Style};
 
 pub struct Elf64Printer;
 

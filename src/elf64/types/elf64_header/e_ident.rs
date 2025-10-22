@@ -166,3 +166,10 @@ impl HeaderField for EIdent {
         )
     }
 }
+
+impl From<&EIdent> for Vec<u8> {
+    fn from(h: &EIdent) -> Vec<u8> {
+        h.raw.to_vec()
+    }
+}
+

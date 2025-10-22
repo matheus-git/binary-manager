@@ -56,7 +56,8 @@ fn resolve_section_name(section_headers: &mut Vec<Elf64SectionHeader>, buf: &[u8
 pub struct Elf64Binary {
     header: Elf64Header,
     program_headers: Vec<Elf64ProgramHeader>,
-    section_headers: Vec<Elf64SectionHeader>
+    section_headers: Vec<Elf64SectionHeader>,
+    pub raw: Vec<u8>
 }
 
 impl Elf64Binary {
@@ -73,7 +74,8 @@ impl Elf64Binary {
         Self { 
             header: elf_header, 
             program_headers,
-            section_headers
+            section_headers,
+            raw: buf.to_vec()
         }
     }
 
@@ -94,5 +96,28 @@ impl Binary for Elf64Binary {
 
     fn get_section_headers(&self) -> &[Self::SectionHeader] {
         &self.section_headers
+    }
+}
+
+impl From<&Elf64Binary> for Vec<u8> {
+    fn from(h: &Elf64Binary) -> Vec<u8> {
+        let mut bytes = h.raw.clone();
+
+        let header_bytes: Vec<u8> = (&h.header).into();
+        bytes[0..header_bytes.len()].copy_from_slice(&header_bytes);
+
+        for (i, ph) in h.program_headers.iter().enumerate() {
+            let ph_bytes: Vec<u8> = ph.into();
+            let offset = h.header.e_phoff.value as usize + i * h.header.e_phentsize.value as usize;
+            bytes[offset..offset + ph_bytes.len()].copy_from_slice(&ph_bytes);
+        }
+
+        for (i, sh) in h.section_headers.iter().enumerate() {
+            let sh_bytes: Vec<u8> = sh.into();
+            let offset = h.header.e_shoff.value as usize + i * h.header.e_shentsize.value as usize;
+            bytes[offset..offset + sh_bytes.len()].copy_from_slice(&sh_bytes);
+        }
+
+        bytes
     }
 }

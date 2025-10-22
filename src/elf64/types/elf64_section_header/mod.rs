@@ -52,3 +52,19 @@ impl Elf64SectionHeader {
         }
     }
 }
+
+impl From<&Elf64SectionHeader> for Vec<u8> {
+    fn from(h: &Elf64SectionHeader) -> Vec<u8> {
+        let mut bytes: Vec<u8> = Vec::new();
+        bytes.extend_from_slice(&h.sh_name.raw);
+        bytes.extend_from_slice(&h.sh_type.raw);
+        bytes.extend_from_slice(&h.sh_flags.raw);
+        bytes.extend_from_slice(&h.sh_addr.raw);
+        bytes.extend_from_slice(&h.sh_offset.raw);
+        bytes.extend_from_slice(&h.sh_size.raw);
+        bytes.extend_from_slice(&h.sh_link.raw);
+        bytes.extend_from_slice(&h.sh_addralign.raw);
+        bytes.extend_from_slice(&h.sh_entsize.raw);
+        bytes
+    }
+}

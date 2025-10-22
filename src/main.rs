@@ -9,7 +9,10 @@ use traits::binary::Binary;
 use utils::binary_type::BinaryType;
 
 use std::fs;
-use std::io;
+use std::fs::{File, Permissions};
+use std::path::Path;
+use std::os::unix::fs::PermissionsExt;
+use std::io::{self, Read};
 
 use clap::Parser;
 
@@ -26,6 +29,9 @@ struct Cli {
 
     #[arg(short = 's', long, help = "Displays the Section Headers of the ELF file")]
     sections: bool,
+
+    #[arg(short = 'o', long, help = "Path to save the output file")]
+    output: Option<String>,
 }
 
 fn main() -> io::Result<()> {
@@ -50,6 +56,15 @@ fn main() -> io::Result<()> {
                 printer.print_program_headers(binary.get_program_headers());
             } else if cli.sections {
                 printer.print_section_headers(binary.get_section_headers());
+            } else if cli.output.is_some() {
+                let bytes: Vec<u8> = (binary.raw).into();
+                if let Some(output) = cli.output{
+                    let _ = fs::write(&output, bytes);
+                    let path = Path::new(&output);
+                    let mut perms = fs::metadata(path)?.permissions();
+                    perms.set_mode(0o755); 
+                    fs::set_permissions(path, perms)?;
+                }
             } else {
                 eprintln!("Use -h, -p or -s.");
             }

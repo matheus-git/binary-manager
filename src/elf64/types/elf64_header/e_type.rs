@@ -63,3 +63,9 @@ impl HeaderField for EType {
         self.value.as_str().to_string()
     }
 }
+
+impl From<&EType> for Vec<u8> {
+    fn from(h: &EType) -> Vec<u8> {
+        h.raw.to_vec()
+    }
+}

@@ -106,3 +106,10 @@ impl HeaderField for EMachine {
         self.value.as_str().to_string()
     }
 }
+
+impl From<&EMachine> for Vec<u8> {
+    fn from(h: &EMachine) -> Vec<u8> {
+        h.raw.to_vec()
+    }
+}
+

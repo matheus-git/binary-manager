@@ -72,3 +72,24 @@ impl Elf64Header {
         }
     }
 }
+
+impl From<&Elf64Header> for Vec<u8> {
+    fn from(h: &Elf64Header) -> Vec<u8> {
+        let mut bytes: Vec<u8> = Vec::new();
+        bytes.extend_from_slice(&h.e_ident.raw);
+        bytes.extend_from_slice(&h.e_type.raw);
+        bytes.extend_from_slice(&h.e_machine.raw);
+        bytes.extend_from_slice(&h.e_version.raw);
+        bytes.extend_from_slice(&h.e_entry.raw);
+        bytes.extend_from_slice(&h.e_phoff.raw);
+        bytes.extend_from_slice(&h.e_shoff.raw);
+        bytes.extend_from_slice(&h.e_flags.raw);
+        bytes.extend_from_slice(&h.e_ehsize.raw);
+        bytes.extend_from_slice(&h.e_phentsize.raw);
+        bytes.extend_from_slice(&h.e_phnum.raw);
+        bytes.extend_from_slice(&h.e_shentsize.raw);
+        bytes.extend_from_slice(&h.e_shnum.raw);
+        bytes.extend_from_slice(&h.e_shstrndx.raw);
+        bytes
+    }
+}

@@ -63,6 +63,7 @@ impl From<&Elf64SectionHeader> for Vec<u8> {
         bytes.extend_from_slice(&h.sh_offset.raw);
         bytes.extend_from_slice(&h.sh_size.raw);
         bytes.extend_from_slice(&h.sh_link.raw);
+        bytes.extend_from_slice(&h.sh_info.raw);
         bytes.extend_from_slice(&h.sh_addralign.raw);
         bytes.extend_from_slice(&h.sh_entsize.raw);
         bytes

@@ -55,13 +55,12 @@ fn main() -> io::Result<()> {
             } else if cli.sections {
                 printer.print_section_headers(binary.get_section_headers());
             } else if cli.output.is_some() {
-                let bytes: Vec<u8> = (binary.raw).into();
-                if let Some(output) = cli.output{
-                    let _ = fs::write(&output, bytes);
-                    let mut perms = fs::metadata(&output)?.permissions();
-                    perms.set_mode(0o755); 
-                    fs::set_permissions(&output, perms)?;
-                }
+                let bytes: Vec<u8> = (&binary).into();
+                let output = cli.output.unwrap();
+                let _ = fs::write(&output, bytes);
+                let mut perms = fs::metadata(&output)?.permissions();
+                perms.set_mode(0o755); 
+                fs::set_permissions(&output, perms)?;
             } else {
                 eprintln!("Use -h, -p or -s.");
             }

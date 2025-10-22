@@ -21,12 +21,12 @@ use crate::utils::endian::Endian;
 #[derive(Debug)]
 pub struct Elf64ProgramHeader {
     pub p_type: PType,
+    pub p_flags: PFlags,
     pub p_offset: POffset,
     pub p_vaddr: PVaddr,
     pub p_paddr: PPaddr,
     pub p_filesz: PFilesz,
     pub p_memsz: PMemsz,
-    pub p_flags: PFlags,
     pub p_align: PAlign
 }
 
@@ -49,12 +49,12 @@ impl From<&Elf64ProgramHeader> for Vec<u8> {
     fn from(h: &Elf64ProgramHeader) -> Vec<u8> {
         let mut bytes: Vec<u8> = Vec::new();
         bytes.extend_from_slice(&h.p_type.raw);
+        bytes.extend_from_slice(&h.p_flags.raw);
         bytes.extend_from_slice(&h.p_offset.raw);
         bytes.extend_from_slice(&h.p_vaddr.raw);
         bytes.extend_from_slice(&h.p_paddr.raw);
         bytes.extend_from_slice(&h.p_filesz.raw);
         bytes.extend_from_slice(&h.p_memsz.raw);
-        bytes.extend_from_slice(&h.p_flags.raw);
         bytes.extend_from_slice(&h.p_align.raw);
         bytes
     }

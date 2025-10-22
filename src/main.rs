@@ -9,10 +9,8 @@ use traits::binary::Binary;
 use utils::binary_type::BinaryType;
 
 use std::fs;
-use std::fs::{File, Permissions};
-use std::path::Path;
 use std::os::unix::fs::PermissionsExt;
-use std::io::{self, Read};
+use std::io;
 
 use clap::Parser;
 
@@ -41,7 +39,7 @@ fn main() -> io::Result<()> {
     let binary_type = BinaryType::from_bytes(&bytes[..5]);
 
     if binary_type.is_none() {
-        eprintln!("Unrecognized binary");
+        eprintln!("Unrecognized binary type");
         return Ok(())
     }
 
@@ -60,10 +58,9 @@ fn main() -> io::Result<()> {
                 let bytes: Vec<u8> = (binary.raw).into();
                 if let Some(output) = cli.output{
                     let _ = fs::write(&output, bytes);
-                    let path = Path::new(&output);
-                    let mut perms = fs::metadata(path)?.permissions();
+                    let mut perms = fs::metadata(&output)?.permissions();
                     perms.set_mode(0o755); 
-                    fs::set_permissions(path, perms)?;
+                    fs::set_permissions(&output, perms)?;
                 }
             } else {
                 eprintln!("Use -h, -p or -s.");

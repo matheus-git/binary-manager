@@ -3,12 +3,6 @@ use crate::utils::bytes_to_hex::bytes_to_hex;
 use crate::utils::endian::Endian;
 
 #[derive(Debug)]
-enum EiMag {
-    Elf,
-    Unknown
-}
-
-#[derive(Debug)]
 enum EiClass {
     Class32,
     Class64,
@@ -95,14 +89,6 @@ impl EIdent {
         Self { 
             raw, 
             as_hex
-        }
-    }
-
-    fn ei_mag(&self) -> EiMag {
-        if self.raw[0..4] == [0x7F, b'E', b'L', b'F'] {
-            EiMag::Elf
-        } else {
-            EiMag::Unknown
         }
     }
 

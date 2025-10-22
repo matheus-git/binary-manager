@@ -61,6 +61,7 @@ fn main() -> io::Result<()> {
                 let mut perms = fs::metadata(&output)?.permissions();
                 perms.set_mode(0o755); 
                 fs::set_permissions(&output, perms)?;
+                println!("Generated at {output}");
             } else {
                 eprintln!("Use -h, -p or -s.");
             }

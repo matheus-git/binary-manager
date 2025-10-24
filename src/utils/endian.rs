@@ -24,4 +24,39 @@ impl Endian {
             Endian::Big => u64::from_be_bytes(bytes),
         }
     }
+
+    pub fn to_bytes_u16(&self, value: u16) -> [u8; 2] {
+        match self {
+            Endian::Little => value.to_le_bytes(),
+            Endian::Big => value.to_be_bytes(),
+        }
+    }
+
+    pub fn to_bytes_u32(&self, value: u32) -> [u8; 4] {
+        match self {
+            Endian::Little => value.to_le_bytes(),
+            Endian::Big => value.to_be_bytes(),
+        }
+    }
+
+    pub fn to_bytes_u64(&self, value: u64) -> [u8; 8] {
+        match self {
+            Endian::Little => value.to_le_bytes(),
+            Endian::Big => value.to_be_bytes(),
+        }
+    }
+
+    pub fn to_bytes_i32(&self, value: i32) -> [u8; 4] {
+        match self {
+            Endian::Little => value.to_le_bytes(),
+            Endian::Big => value.to_be_bytes(),
+        }
+    }
+
+    pub fn to_bytes_i64(&self, value: i64) -> [u8; 8] {
+        match self {
+            Endian::Little => value.to_le_bytes(),
+            Endian::Big => value.to_be_bytes(),
+        }
+    }
 }

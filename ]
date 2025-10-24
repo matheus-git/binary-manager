@@ -83,7 +83,8 @@ impl Elf64Binary {
     }
 
     pub fn inject(&mut self, buf: Vec<u8>) -> Vec<u8> {
-        const NEW_ADDR: u32 = 0x60000; 
+        let mut injected: Vec<u8> = self.into();
+        const NEW_ADDR = u64::from_str_radix("80000", 16).expect("failed"); 
          
         let endian = self.header.e_ident.endian();
 
@@ -102,39 +103,17 @@ impl Elf64Binary {
             .find(|p| p.p_offset.raw == note_offset)
         {
             println!("Program header encontrado com offset {:?}", program.p_offset.describe());
-            let n: i64 = (self.raw.len() % 4096) as i64 - (NEW_ADDR % 4096) as i64;
-            let new_addr = endian.to_bytes_i64(NEW_ADDR as i64 + n);
-            program.p_offset.raw = endian.to_bytes_u64(self.raw.len() as u64);
-            program.p_flags.raw = endian.to_bytes_u32(5);
-            program.p_type.raw = endian.to_bytes_u32(1);
-            program.p_vaddr.raw = new_addr;
-            program.p_paddr.raw = new_addr;
-            program.p_memsz.raw = endian.to_bytes_u64(buf.len() as u64);
-            program.p_filesz.raw = endian.to_bytes_u64(buf.len() as u64);
-            program.p_align.raw = endian.to_bytes_u64(0x1000);
-        let hex_string = format!("0x{:X}", self.raw.len());
-        println!("{}", hex_string); 
-        let value = format!("0x{:X}", endian.read_u64(new_addr));
-            println!("{}", value);
+            program.p_offset.raw = [41, 1, 45, 0, 0, 0, 0, 0];
+            let n: i32 = (injected.len() % 4096) as i32 - (endian.read_u64(program.p_vaddr.raw) % 4096) as i32;
+            println!("{}{n}",endian.read_u64(program.p_vaddr.raw));
+            injected.extend_from_slice(&[0,0]);
         } else {
             println!("Program header correspondente não encontrado!");
             return Vec::new();
         }
 
-        let mut injected: Vec<u8> = self.into();
-        injected.extend(buf);
-
-        injected
+        self.into()
     }
-
-pub fn set_entry(&mut self, hex_entry: String) {
-    let endian = self.header.e_ident.endian();
-
-    let entry = u64::from_str_radix(hex_entry.trim_start_matches("0x"), 16)
-        .expect("Failed to parse hex string");
-
-    self.header.e_entry.raw = endian.to_bytes_u64(entry);
-}
 }
 
 impl Binary for Elf64Binary {

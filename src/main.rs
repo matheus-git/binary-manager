@@ -30,6 +30,12 @@ struct Cli {
 
     #[arg(short = 'o', long, help = "Path to save the output file")]
     output: Option<String>,
+
+    #[arg(short = 'i', long, help = "Path to inject file")]
+    inject: Option<String>,
+
+    #[arg(long, help = "Set entry")]
+    entry: Option<String>
 }
 
 fn main() -> io::Result<()> {
@@ -45,7 +51,7 @@ fn main() -> io::Result<()> {
 
     match binary_type.unwrap() {
         BinaryType::Elf64 => {
-            let binary = Elf64Binary::new(&bytes);
+            let mut binary = Elf64Binary::new(&bytes);
 
             let printer: Elf64Printer = Elf64Printer;
             if cli.header {
@@ -57,6 +63,24 @@ fn main() -> io::Result<()> {
             } else if cli.output.is_some() {
                 let bytes: Vec<u8> = (&binary).into();
                 let output = cli.output.unwrap();
+                let _ = fs::write(&output, bytes);
+                let mut perms = fs::metadata(&output)?.permissions();
+                perms.set_mode(0o755); 
+                fs::set_permissions(&output, perms)?;
+                println!("Generated at {output}");
+            } else if cli.inject.is_some() {
+                let bytes: Vec<u8> = fs::read(cli.inject.unwrap())?;
+                let injected: Vec<u8> = binary.inject(bytes);
+                let output = "./out/injected";
+                let _ = fs::write(&output, injected);
+                let mut perms = fs::metadata(&output)?.permissions();
+                perms.set_mode(0o755); 
+                fs::set_permissions(&output, perms)?;
+                println!("Generated at {output}");
+            } else if cli.entry.is_some() {
+                binary.set_entry(cli.entry.unwrap());
+                let bytes: Vec<u8> = (&binary).into();
+                let output = "./out/injected";
                 let _ = fs::write(&output, bytes);
                 let mut perms = fs::metadata(&output)?.permissions();
                 perms.set_mode(0o755); 

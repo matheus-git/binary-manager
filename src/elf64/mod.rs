@@ -83,39 +83,62 @@ impl Elf64Binary {
     }
 
     pub fn inject(&mut self, buf: Vec<u8>) -> Vec<u8> {
-        const NEW_ADDR: u32 = 0x60000; 
-         
+        const NEW_ADDR: u64 = 0x60000; 
+        const ALIGN: u64 = 0x1000;
+        const NOTE_NAME: &str = ".note.ABI-tag";
+
+        let file_off: u64 = self.raw.len() as u64;
+        let delta = (file_off % ALIGN + ALIGN - (NEW_ADDR as u64 % ALIGN)) % ALIGN;
+        let new_addr = NEW_ADDR + delta;
+
         let endian = self.header.e_ident.endian();
 
-        let note_offset = self.section_headers
-            .iter()
-            .find(|s| s.sh_name.name == ".note.ABI-tag")
-            .map(|s| s.sh_offset.raw);
+        let note_section = self.section_headers
+            .iter_mut()
+            .find(|s| s.sh_name.name == NOTE_NAME)
+            .map(|s| s);
 
-        let Some(note_offset) = note_offset else {
-            println!(".note.ABI-tag not found");
+        let note_offset = if let Some(section) = note_section {
+            let note_offset = section.sh_offset.raw;
+            let section_name_idx = endian.read_u32(section.sh_name.raw) as usize;
+
+            section.sh_type.raw = endian.to_bytes_u32(1);            
+            section.sh_addr.raw = endian.to_bytes_u64(new_addr);
+            section.sh_size.raw = endian.to_bytes_u64(buf.len() as  u64);
+            section.sh_offset.raw = endian.to_bytes_u64(file_off);
+            section.sh_addralign.raw = endian.to_bytes_u64(16);
+            section.sh_flags.raw = endian.to_bytes_u64(6);
+
+            let shstrtab_idx = endian.read_u16(self.header.e_shstrndx.raw);
+            let shstrtab_section_header = &self.section_headers[shstrtab_idx as usize];
+            let shstrtab_section_header_offset = endian.read_u64(shstrtab_section_header.sh_offset.raw);
+            
+            let new_name = ".injected\0".as_bytes(); 
+            let start = shstrtab_section_header_offset as usize + section_name_idx;
+            let end = start + new_name.len();
+            
+            self.raw[start..end].copy_from_slice(new_name);
+
+            note_offset
+        } else {
+            println!("{} not found", NOTE_NAME);
             return Vec::new();
-        };
+        };        
 
         if let Some(program) = self.program_headers
             .iter_mut()
             .find(|p| p.p_offset.raw == note_offset)
         {
-            println!("Program header encontrado com offset {:?}", program.p_offset.describe());
-            let n: i64 = (self.raw.len() % 4096) as i64 - (NEW_ADDR % 4096) as i64;
-            let new_addr = endian.to_bytes_i64(NEW_ADDR as i64 + n);
             program.p_offset.raw = endian.to_bytes_u64(self.raw.len() as u64);
             program.p_flags.raw = endian.to_bytes_u32(5);
             program.p_type.raw = endian.to_bytes_u32(1);
-            program.p_vaddr.raw = new_addr;
-            program.p_paddr.raw = new_addr;
+            program.p_vaddr.raw = endian.to_bytes_u64(new_addr);
+            program.p_paddr.raw = endian.to_bytes_u64(new_addr);
             program.p_memsz.raw = endian.to_bytes_u64(buf.len() as u64);
             program.p_filesz.raw = endian.to_bytes_u64(buf.len() as u64);
             program.p_align.raw = endian.to_bytes_u64(0x1000);
-        let hex_string = format!("0x{:X}", self.raw.len());
-        println!("{}", hex_string); 
-        let value = format!("0x{:X}", endian.read_u64(new_addr));
-            println!("{}", value);
+
+            println!("Injected addr: 0x{:X}", new_addr);
         } else {
             println!("Program header correspondente não encontrado!");
             return Vec::new();
@@ -127,14 +150,14 @@ impl Elf64Binary {
         injected
     }
 
-pub fn set_entry(&mut self, hex_entry: String) {
-    let endian = self.header.e_ident.endian();
+    pub fn set_entry(&mut self, hex_entry: String) {
+        let endian = self.header.e_ident.endian();
 
-    let entry = u64::from_str_radix(hex_entry.trim_start_matches("0x"), 16)
-        .expect("Failed to parse hex string");
+        let entry = u64::from_str_radix(hex_entry.trim_start_matches("0x"), 16)
+            .expect("Failed to parse hex string");
 
-    self.header.e_entry.raw = endian.to_bytes_u64(entry);
-}
+        self.header.e_entry.raw = endian.to_bytes_u64(entry);
+    }
 }
 
 impl Binary for Elf64Binary {

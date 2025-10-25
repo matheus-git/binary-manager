@@ -71,7 +71,7 @@ fn main() -> io::Result<()> {
             } else if cli.inject.is_some() {
                 let bytes: Vec<u8> = fs::read(cli.inject.unwrap())?;
                 let injected: Vec<u8> = binary.inject(bytes);
-                let output = "./out/injected";
+                let output = "./out/injected2";
                 let _ = fs::write(&output, injected);
                 let mut perms = fs::metadata(&output)?.permissions();
                 perms.set_mode(0o755); 
@@ -80,7 +80,7 @@ fn main() -> io::Result<()> {
             } else if cli.entry.is_some() {
                 binary.set_entry(cli.entry.unwrap());
                 let bytes: Vec<u8> = (&binary).into();
-                let output = "./out/injected";
+                let output = "./out/injected2";
                 let _ = fs::write(&output, bytes);
                 let mut perms = fs::metadata(&output)?.permissions();
                 perms.set_mode(0o755); 

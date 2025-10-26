@@ -1,12 +1,14 @@
 mod elf64;
 mod traits;
 mod utils;
+mod disasm;
 
 use elf64::Elf64Binary;
 use elf64::printers::Elf64Printer;
 use traits::binary_printer::BinaryPrinter;
 use traits::binary::Binary;
 use utils::binary_type::BinaryType;
+use disasm::disass;
 
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
@@ -35,7 +37,10 @@ struct Cli {
     inject: Option<String>,
 
     #[arg(long, help = "Set entry")]
-    entry: Option<String>
+    entry: Option<String>,
+
+    #[arg(short = 'd', long, help = "Disassemble file")]
+    disasm: Option<String>,
 }
 
 fn main() -> io::Result<()> {
@@ -86,6 +91,11 @@ fn main() -> io::Result<()> {
                 perms.set_mode(0o755); 
                 fs::set_permissions(&output, perms)?;
                 println!("Generated at {output}");
+            } else if cli.disasm.is_some() {
+                let x = binary.get_bytes_section(&cli.disasm.unwrap());
+                if let Some(x) = x {
+                    disass(x.0, &x.1);
+                }
             } else {
                 eprintln!("Use -h, -p or -s.");
             }

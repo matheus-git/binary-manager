@@ -2,8 +2,6 @@ mod loaders;
 pub mod types;
 pub mod printers;
 
-use std::fmt::format;
-
 use loaders::load_elf64_header::LoadELF64Header;
 use loaders::load_elf64_program_header::LoadELF64ProgramHeader;
 use loaders::load_elf64_section_header::LoadELF64SectionHeader;
@@ -12,7 +10,6 @@ use types::elf64_header::Elf64Header;
 use types::elf64_program_header::Elf64ProgramHeader;
 use types::elf64_section_header::Elf64SectionHeader;
 use crate::traits::binary::Binary;
-use crate::traits::header_field::HeaderField;
 use crate::utils::endian::Endian;
 use crate::utils::string_until_null::string_until_null;
 
@@ -60,7 +57,7 @@ pub struct Elf64Binary {
     header: Elf64Header,
     program_headers: Vec<Elf64ProgramHeader>,
     section_headers: Vec<Elf64SectionHeader>,
-    pub raw: Vec<u8>
+    raw: Vec<u8>
 }
 
 impl Elf64Binary {
@@ -80,6 +77,38 @@ impl Elf64Binary {
             section_headers,
             raw: buf.to_vec()
         }
+    }
+
+    pub fn get_bytes_section(&self, section_name: &str) -> Option<(u64, Vec<u8>)> {
+        let section = self.get_section_headers()
+            .iter()
+            .find(|s| s.sh_name.name == section_name)
+            .map(|s| s);
+
+        if let Some(section) = section {
+            let endian = self.header.e_ident.endian();
+
+            let bytes: Vec<u8> = self.into();
+            let offset = endian.read_u64(section.sh_offset.raw) as usize;
+            let size = endian.read_u64(section.sh_size.raw) as usize;
+            return Some((endian.read_u64(section.sh_addr.raw), bytes[offset..offset + size].to_vec()));
+        }else {
+            return None;
+        }
+    }
+
+    pub fn update_section_name(&mut self, section_name_idx: usize){
+        let endian = self.header.e_ident.endian();
+
+        let shstrtab_idx = endian.read_u16(self.header.e_shstrndx.raw);
+        let shstrtab_section_header = &self.section_headers[shstrtab_idx as usize];
+        let shstrtab_section_header_offset = endian.read_u64(shstrtab_section_header.sh_offset.raw);
+        
+        let new_name = ".injected\0".as_bytes(); 
+        let start = shstrtab_section_header_offset as usize + section_name_idx;
+        let end = start + new_name.len();
+        
+        self.raw[start..end].copy_from_slice(new_name);
     }
 
     pub fn inject(&mut self, buf: Vec<u8>) -> Vec<u8> {
@@ -109,15 +138,7 @@ impl Elf64Binary {
             section.sh_addralign.raw = endian.to_bytes_u64(16);
             section.sh_flags.raw = endian.to_bytes_u64(6);
 
-            let shstrtab_idx = endian.read_u16(self.header.e_shstrndx.raw);
-            let shstrtab_section_header = &self.section_headers[shstrtab_idx as usize];
-            let shstrtab_section_header_offset = endian.read_u64(shstrtab_section_header.sh_offset.raw);
-            
-            let new_name = ".injected\0".as_bytes(); 
-            let start = shstrtab_section_header_offset as usize + section_name_idx;
-            let end = start + new_name.len();
-            
-            self.raw[start..end].copy_from_slice(new_name);
+            self.update_section_name(section_name_idx);
 
             note_offset
         } else {
@@ -140,7 +161,7 @@ impl Elf64Binary {
 
             println!("Injected addr: 0x{:X}", new_addr);
         } else {
-            println!("Program header correspondente não encontrado!");
+            println!("Program header not found!");
             return Vec::new();
         }
 

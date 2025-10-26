@@ -12,7 +12,7 @@ use disasm::disass;
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 
-use clap::{Parser, Error,  Subcommand};
+use clap::{Parser, Error, Subcommand};
 
 #[derive(Parser)]
 struct Cli {
@@ -22,41 +22,46 @@ struct Cli {
 
 #[derive(Subcommand, Debug)]
 enum Commands {
+    #[command(about = "Inject bytes into an ELF file")]
     Inject {
-        #[arg(help = "Path to the ELF file to be analyzed")]
+        #[arg(help = "Path to the ELF file to analyze")]
         file: String,
 
-        #[arg(short = 'i', long, help = "Path to inject file")]
+        #[arg(short = 'i', long, help = "Path to the file containing bytes to inject")]
         inject: String,
 
         #[arg(short = 'o', long, help = "Path to save the output file")]
         output: String,
     },
+
+    #[command(about = "Disassemble a section or address range of an ELF file")]
     Disasm {
-       #[arg(help = "Path to the ELF file to be analyzed")]
+       #[arg(help = "Path to the ELF file to analyze")]
         file: String,
 
-       #[arg(short = 's', long = "section", help = "Disassemble file")]
+       #[arg(short = 's', long = "section", help = "Section name to disassemble (e.g. .text)")]
         section: Option<String>,
     },
+    #[command(about = "Display ELF information")]
     Info {
-        #[arg(help = "Path to the ELF file to be analyzed")]
+        #[arg(help = "Path to the ELF file to analyze")]
         file: String,
 
-        #[arg(short = 'e', long, help = "Displays the ELF Header of the file")]
+        #[arg(short = 'e', long, help = "Display the ELF header of the file")]
         header: bool,
 
-        #[arg(short = 'p', long, help = "Displays the Program Headers of the ELF file")]
+        #[arg(short = 'p', long, help = "Display the program headers of the ELF file")]
         programs: bool,
 
-        #[arg(short = 's', long, help = "Displays the Section Headers of the ELF file")]
+        #[arg(short = 's', long, help = "Display the section headers of the ELF file")]
         sections: bool,
     },
+    #[command(about = "Update ELF metadata (e.g., entry point)")]
     Update {
-        #[arg(help = "Path to the ELF file to be analyzed")]
+        #[arg(help = "Path to the ELF file to analyze")]
         file: String,       
 
-        #[arg(long, help = "Set entry")]
+        #[arg(long, help = "Set entry point (e.g. 0x401000)")]
         entry: Option<String>,
 
         #[arg(short = 'o', long, help = "Path to save the output file")]
@@ -64,10 +69,18 @@ enum Commands {
     }
 }
 
-fn load_file(file: &str) -> Elf64Binary {
-    let bytes: Vec<u8> = fs::read(file).expect("failed");
+fn load_file(file: &str) -> Result<Elf64Binary, Error> {
+    let bytes: Vec<u8> = fs::read(file)?;
 
-    Elf64Binary::new(&bytes)
+    Ok(Elf64Binary::new(&bytes))
+}
+
+fn save_file(file: &str, buf: &[u8]) -> Result<(), Error>{
+    let _ = fs::write(file, buf);
+    let mut perms = fs::metadata(&file)?.permissions();
+    perms.set_mode(0o755); 
+    fs::set_permissions(&file, perms)?;
+    Ok(())
 }
 
 fn main() -> Result<(), Error> {
@@ -79,37 +92,25 @@ fn main() -> Result<(), Error> {
 
     match &cli.command {
         Commands::Inject { file, inject, output } => {
-            binary = load_file(file);
+            binary = load_file(file)?;
 
             let bytes = fs::read(inject)?; 
 
             let injected: Vec<u8> = binary.inject(bytes);
-            let _ = fs::write(&output, injected);
-            let mut perms = fs::metadata(&output)?.permissions();
-            perms.set_mode(0o755); 
-            fs::set_permissions(&output, perms)?;
+            save_file(output, &injected)?;
             println!("Generated at {output}");
         },
         Commands::Disasm { file, section } => {
-            binary = load_file(file);
+            binary = load_file(file)?;
 
-            let section =  section
-                .as_ref();
-            
-            let mut bytes: Vec<u8> = (&binary).into();
-            let mut addr: u64 = 0;
-
-            if let Some(section) = section {
-                if let Some((_addr, _bytes)) = binary.get_bytes_section(section) {
-                    addr = _addr;
-                    bytes = _bytes;
+            if let Some(section) = section.as_ref() {
+                if let Some((addr, bytes)) = binary.get_bytes_section(section) {
+                    disass(addr, &bytes);
                 }
             }
-
-            disass(addr, &bytes);
         },
         Commands::Info { file, header, programs, sections } => {
-            binary = load_file(file);
+            binary = load_file(file)?;
             if *header {
                 printer.print_header(binary.get_header());
             } else if *programs {
@@ -119,20 +120,16 @@ fn main() -> Result<(), Error> {
             } 
         },
         Commands::Update { file, entry, output } => {
-            binary = load_file(file);
+            binary = load_file(file)?;
 
             if entry.is_some() {
                 binary.set_entry(entry.as_ref().unwrap().to_string());
                 let bytes: Vec<u8> = (&binary).into();
-                let _ = fs::write(&output, bytes);
-                let mut perms = fs::metadata(&output)?.permissions();
-                perms.set_mode(0o755); 
-                fs::set_permissions(&output, perms)?;
+                save_file(output, &bytes)?;
                 println!("Generated at {output}");
             }
         }
     }
-
 
     Ok(())
 }

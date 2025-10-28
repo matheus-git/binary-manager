@@ -97,6 +97,23 @@ impl Elf64Binary {
         }
     }
 
+    pub fn endian(&self) -> Endian {
+        self.header.e_ident.endian()
+    }
+
+    pub fn entry(&self) -> u64 {
+        let endian = self.endian();
+        return endian.read_u64(self.header.e_entry.raw);
+    }
+
+    pub fn calculate_new_addr(&self, addr: u64) -> u64 {
+        const ALIGN: u64 = 0x1000;
+        let bytes: Vec<u8> = self.into();
+        let offset = bytes.len() as u64;
+        let delta = (offset % ALIGN + ALIGN - (addr as u64 % ALIGN)) % ALIGN;
+        addr + delta
+    }
+
     pub fn update_section_name(&mut self, section_name_idx: usize){
         let endian = self.header.e_ident.endian();
 
@@ -112,13 +129,11 @@ impl Elf64Binary {
     }
 
     pub fn inject(&mut self, buf: Vec<u8>) -> Vec<u8> {
-        const NEW_ADDR: u64 = 0x60000; 
-        const ALIGN: u64 = 0x1000;
         const NOTE_NAME: &str = ".note.ABI-tag";
 
-        let file_off: u64 = self.raw.len() as u64;
-        let delta = (file_off % ALIGN + ALIGN - (NEW_ADDR as u64 % ALIGN)) % ALIGN;
-        let new_addr = NEW_ADDR + delta;
+        let bytes: Vec<u8> = self.into();
+        let file_off = bytes.len() as u64;
+        let new_addr = self.calculate_new_addr(0x60000);
 
         let endian = self.header.e_ident.endian();
 

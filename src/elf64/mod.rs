@@ -160,6 +160,8 @@ impl Elf64Binary {
             program.p_align.raw = endian.to_bytes_u64(0x1000);
 
             println!("Injected addr: 0x{:X}", new_addr);
+            let entry_addr = endian.read_u64(self.header.e_entry.raw) as i64;
+            println!("Return to entry: 0x{:X}", (entry_addr - new_addr as i64));
         } else {
             println!("Program header not found!");
             return Vec::new();

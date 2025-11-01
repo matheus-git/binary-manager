@@ -4,6 +4,8 @@
 
 A modular toolbox for analyzing, disassembling, and patching binary formats. Currently, binkit supports ELF64 only.
 
+**Do not use binkit to modify or inject code into third-party software without permission, as doing so may be illegal and could result in criminal or civil liability. This project is intended for educational, research, and security analysis purposes only.**
+
 ## Usage
 
 ### Info

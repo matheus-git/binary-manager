@@ -58,7 +58,7 @@ enum Commands {
         #[arg(help = "Path to the ELF file to disassemble")]
         file: String,
 
-        #[arg(short = 's', long, help = "Section name to disassemble. ( default: .text) ")]
+        #[arg(short = 's', long, help = "Section name to disassemble. (default: .text) ")]
         section: Option<String>,
     },
 
@@ -67,7 +67,7 @@ enum Commands {
         #[arg(help = "Path to the ELF file to analyze")]
         file: String,
 
-        #[arg(short = 'e', long, help = "Display the ELF header information")]
+        #[arg(short = 'H', long, help = "Display the ELF header information")]
         header: bool,
 
         #[arg(short = 'p', long, help = "Display the program headers of the ELF file")]

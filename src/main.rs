@@ -25,47 +25,49 @@ struct Cli {
 enum Commands {
     #[command(about = "Inject bytes into an ELF file")]
     Inject {
-        #[arg(help = "Path to the ELF file to analyze")]
+        #[arg(help = "Path to the ELF file to inject into")]
         file: String,
 
         #[arg(short = 'i', long, help = "Path to the file containing bytes to inject")]
         inject: String,
 
-        #[arg(short = 'a', long, help = "Path to the file containing bytes to inject")]
+        #[arg(short = 'a', long, help = "Address to inject at (hexadecimal). Overrides section if provided")]
         address: Option<String>,
 
-        #[arg(short = 's', long, help = "Path to the file containing bytes to inject")]
+        #[arg(short = 's', long, help = "Section name to inject into. Used if address is not provided")]
         section: Option<String>,
 
-        #[arg(short = 'r', long, help = "Path to the file containing bytes to inject")]
+        #[arg(short = 'r', long, help = "Return address after injected code executes (hexadecimal). Defaults to ELF entry point")]
         return_address: Option<String>,
 
-        #[arg(short = 'o', long, help = "Path to save the output file")]
+        #[arg(short = 'o', long, help = "Path to save the modified ELF output")]
         output: String,
     },
 
+    #[command(about = "Check available injection point in an ELF file")]
     CheckInject {
         #[arg(help = "Path to the ELF file to analyze")]
         file: String,
 
-        #[arg(short = 'r', long, help = "Path to the file containing bytes to inject")]
+        #[arg(short = 'r', long, help = "Return address for calculating relative offsets (hexadecimal). Defaults to ELF entry point")]
         return_address: Option<String>,
     },
 
     #[command(about = "Disassemble a section or address range of an ELF file")]
     Disasm {
-       #[arg(help = "Path to the ELF file to analyze")]
+        #[arg(help = "Path to the ELF file to disassemble")]
         file: String,
 
-       #[arg(short = 's', long = "section", help = "Section name to disassemble (e.g. .text)")]
+        #[arg(short = 's', long, help = "Section name to disassemble. ( default: .text) ")]
         section: Option<String>,
     },
-    #[command(about = "Display ELF information")]
+
+    #[command(about = "Display ELF file information")]
     Info {
         #[arg(help = "Path to the ELF file to analyze")]
         file: String,
 
-        #[arg(short = 'e', long, help = "Display the ELF header of the file")]
+        #[arg(short = 'e', long, help = "Display the ELF header information")]
         header: bool,
 
         #[arg(short = 'p', long, help = "Display the program headers of the ELF file")]
@@ -74,16 +76,17 @@ enum Commands {
         #[arg(short = 's', long, help = "Display the section headers of the ELF file")]
         sections: bool,
     },
-    #[command(about = "Update ELF metadata (e.g., entry point)")]
+
+    #[command(about = "Update ELF metadata")]
     Update {
-        #[arg(help = "Path to the ELF file to analyze")]
+        #[arg(help = "Path to the ELF file to modify")]
         file: String,       
 
-        #[arg(long, help = "Set entry point (e.g. 0x401000)")]
+        #[arg(long, help = "Set a new entry point for the ELF file (hexadecimal)")]
         entry: Option<String>,
 
-        #[arg(short = 'o', long, help = "Path to save the output file")]
-        output: String,
+        #[arg(short = 'o', long, help = "Path to save the updated ELF file")]
+        output: Option<String>,
     }
 }
 
@@ -163,10 +166,14 @@ fn main() -> Result<(), Error> {
         Commands::Disasm { file, section } => {
             binary = load_file(file)?;
 
+            let mut final_section = ".text";
+
             if let Some(section) = section.as_ref() {
-                if let Some((addr, bytes)) = binary.get_bytes_section(section) {
-                    disass(addr, &bytes);
-                }
+                final_section = section;
+            }
+
+            if let Some((addr, bytes)) = binary.get_bytes_section(final_section) {
+                disass(addr, &bytes);
             }
         },
         Commands::Info { file, header, programs, sections } => {
@@ -182,11 +189,17 @@ fn main() -> Result<(), Error> {
         Commands::Update { file, entry, output } => {
             binary = load_file(file)?;
 
+            let mut final_output = file;
+
+            if let Some(output) = output {
+                final_output = output;
+            }
+
             if entry.is_some() {
                 binary.set_entry(entry.as_ref().unwrap().to_string());
                 let bytes: Vec<u8> = (&binary).into();
-                save_file(output, &bytes)?;
-                println!("Generated at {output}");
+                save_file(final_output, &bytes)?;
+                println!("Output written to: {}", final_output);
             }
         }
     }

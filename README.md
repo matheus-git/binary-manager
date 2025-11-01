@@ -17,10 +17,10 @@ A modular toolbox for analyzing, disassembling, and patching binary formats. Cur
 ### Inject 
 
 Code injection is performed at the end of the binary, and then one of the program and section headers are modified to point to the injected code.
-The command returns the address where the code was inserted and a reference to the original entry point or address (see the help section).
+The command returns the address where the code was inserted and a reference to the original entry point or address.
 A common workflow is to update the file’s entry point with ``binkit update``, then later return to the original entry point.
 The ``binkit check-inject`` command performs a pre-check of which addresses will be used so you can edit or prepare the payload before injection.
-The modified section will be renamed to inject.
+The modified section will be renamed to ``.inject``.
 Use ``--help`` for more options.
 
     binkit inject <FILE> --inject <BIN_FILE> --output <OUTPUT>

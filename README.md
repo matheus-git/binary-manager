@@ -23,7 +23,7 @@ The ``binkit check-inject`` command performs a pre-check of which addresses will
 The modified section will be renamed to inject.
 Use ``--help`` for more options.
 
-    binkit inject <FILE> --inject <INJECT> --output <OUTPUT>
+    binkit inject <FILE> --inject <BIN_FILE> --output <OUTPUT>
 
 ### Check Inject
 

@@ -52,6 +52,8 @@ fn resolve_section_name(section_headers: &mut Vec<Elf64SectionHeader>, buf: &[u8
     }
 }
 
+const ALIGN: u64 = 0x1000;
+
 #[derive(Debug)]
 pub struct Elf64Binary {
     header: Elf64Header,
@@ -106,12 +108,30 @@ impl Elf64Binary {
         return endian.read_u64(self.header.e_entry.raw);
     }
 
+    pub fn get_address_to_inject(&self) -> u64 {
+        let program_headers = &self.program_headers;
+        let endian = self.endian();
+        let mut higher_addr: u64 = 0;
+        for program in program_headers {
+            let initial_address = endian.read_u64(program.p_vaddr.raw);
+            let memsz = endian.read_u64(program.p_filesz.raw);
+            let final_address = initial_address + memsz;
+            if final_address > higher_addr {
+                higher_addr = final_address;
+            }
+        };
+        self.calculate_new_addr(higher_addr + ALIGN)
+    }
+
     pub fn calculate_new_addr(&self, addr: u64) -> u64 {
-        const ALIGN: u64 = 0x1000;
         let bytes: Vec<u8> = self.into();
         let offset = bytes.len() as u64;
         let delta = (offset % ALIGN + ALIGN - (addr as u64 % ALIGN)) % ALIGN;
         addr + delta
+    }
+
+    pub fn calculate_rel32(&self, addr_base: u64, addr_target: u64) -> i64 {
+        return addr_target as i64 - addr_base as i64;
     }
 
     pub fn update_section_name(&mut self, section_name_idx: usize){
@@ -128,12 +148,11 @@ impl Elf64Binary {
         self.raw[start..end].copy_from_slice(new_name);
     }
 
-    pub fn inject(&mut self, buf: Vec<u8>) -> Vec<u8> {
+    pub fn inject(&mut self, buf: Vec<u8>, new_addr: u64) -> Vec<u8> {
         const NOTE_NAME: &str = ".note.ABI-tag";
 
         let bytes: Vec<u8> = self.into();
         let file_off = bytes.len() as u64;
-        let new_addr = self.calculate_new_addr(0x60000);
 
         let endian = self.header.e_ident.endian();
 
@@ -172,11 +191,7 @@ impl Elf64Binary {
             program.p_paddr.raw = endian.to_bytes_u64(new_addr);
             program.p_memsz.raw = endian.to_bytes_u64(buf.len() as u64);
             program.p_filesz.raw = endian.to_bytes_u64(buf.len() as u64);
-            program.p_align.raw = endian.to_bytes_u64(0x1000);
-
-            println!("Injected addr: 0x{:X}", new_addr);
-            let entry_addr = endian.read_u64(self.header.e_entry.raw) as i64;
-            println!("Return to entry: 0x{:X}", (entry_addr - new_addr as i64));
+            program.p_align.raw = endian.to_bytes_u64(ALIGN);
         } else {
             println!("Program header not found!");
             return Vec::new();

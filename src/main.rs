@@ -8,6 +8,7 @@ use elf64::printers::Elf64Printer;
 use traits::binary_printer::BinaryPrinter;
 use traits::binary::Binary;
 use disasm::disass;
+use utils::parse_hex::parse_hex;
 
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
@@ -30,8 +31,22 @@ enum Commands {
         #[arg(short = 'i', long, help = "Path to the file containing bytes to inject")]
         inject: String,
 
+        #[arg(short = 'a', long, help = "Path to the file containing bytes to inject")]
+        address: Option<String>,
+
+        #[arg(short = 'r', long, help = "Path to the file containing bytes to inject")]
+        return_address: Option<String>,
+
         #[arg(short = 'o', long, help = "Path to save the output file")]
         output: String,
+    },
+
+    CheckInject {
+        #[arg(help = "Path to the ELF file to analyze")]
+        file: String,
+
+        #[arg(short = 'r', long, help = "Path to the file containing bytes to inject")]
+        return_address: Option<String>,
     },
 
     #[command(about = "Disassemble a section or address range of an ELF file")]
@@ -91,14 +106,51 @@ fn main() -> Result<(), Error> {
     let printer: Elf64Printer = Elf64Printer;
 
     match &cli.command {
-        Commands::Inject { file, inject, output } => {
+        Commands::Inject { file, address, return_address, inject, output } => {
             binary = load_file(file)?;
 
             let bytes = fs::read(inject)?; 
 
-            let injected: Vec<u8> = binary.inject(bytes);
+            let mut final_address = binary.get_address_to_inject();
+            let mut final_return_address = binary.entry();
+
+            if let Some(address) = address.as_ref() {
+                final_address = parse_hex(address);
+            }
+
+            if let Some(return_address) = return_address.as_ref() {
+                final_return_address = parse_hex(return_address);
+            }
+
+            let injected: Vec<u8> = binary.inject(bytes, final_address);
+            println!("Payload injected at 0x{:X}", final_address);
+            let rel32_addr = binary.calculate_rel32(final_address, final_return_address);
+            if return_address.is_some() {
+                println!("Rel32 to 0x{:X}: 0x{:X}", final_return_address, rel32_addr);
+            }else {
+                println!("Rel32 to original entry point (0x{:X}): 0x{:X}", final_return_address, rel32_addr);
+            }
             save_file(output, &injected)?;
-            println!("Generated at {output}");
+            println!("Output written to: {}", output);
+        },
+        Commands::CheckInject { file, return_address } => {
+            binary = load_file(file)?;
+
+            let mut final_return_address = binary.entry();
+
+            if let Some(return_address) = return_address.as_ref() {
+                final_return_address = parse_hex(return_address);
+            }
+
+            let addr = binary.get_address_to_inject();
+            println!("Injection slot available at: 0x{:X}", addr);
+
+            let rel32_addr = binary.calculate_rel32(addr, final_return_address);
+            if return_address.is_some() {
+                println!("Rel32 relative to 0x{:X}: 0x{:X}", final_return_address, rel32_addr);
+            }else {
+                println!("Rel32 to original entry point (0x{:X}): 0x{:X}", final_return_address, rel32_addr);
+            }
         },
         Commands::Disasm { file, section } => {
             binary = load_file(file)?;

@@ -34,6 +34,9 @@ enum Commands {
         #[arg(short = 'a', long, help = "Path to the file containing bytes to inject")]
         address: Option<String>,
 
+        #[arg(short = 's', long, help = "Path to the file containing bytes to inject")]
+        section: Option<String>,
+
         #[arg(short = 'r', long, help = "Path to the file containing bytes to inject")]
         return_address: Option<String>,
 
@@ -106,13 +109,14 @@ fn main() -> Result<(), Error> {
     let printer: Elf64Printer = Elf64Printer;
 
     match &cli.command {
-        Commands::Inject { file, address, return_address, inject, output } => {
+        Commands::Inject { file, address, return_address, inject, output, section } => {
             binary = load_file(file)?;
 
             let bytes = fs::read(inject)?; 
 
             let mut final_address = binary.get_address_to_inject();
             let mut final_return_address = binary.entry();
+            let mut final_section = ".note.ABI-tag";
 
             if let Some(address) = address.as_ref() {
                 final_address = parse_hex(address);
@@ -122,7 +126,11 @@ fn main() -> Result<(), Error> {
                 final_return_address = parse_hex(return_address);
             }
 
-            let injected: Vec<u8> = binary.inject(bytes, final_address);
+            if let Some(section) = section.as_ref() {
+                final_section = section;
+            }
+
+            let injected: Vec<u8> = binary.inject(bytes, final_address, final_section);
             println!("Payload injected at 0x{:X}", final_address);
             let rel32_addr = binary.calculate_rel32(final_address, final_return_address);
             if return_address.is_some() {

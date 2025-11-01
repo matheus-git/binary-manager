@@ -148,8 +148,8 @@ impl Elf64Binary {
         self.raw[start..end].copy_from_slice(new_name);
     }
 
-    pub fn inject(&mut self, buf: Vec<u8>, new_addr: u64) -> Vec<u8> {
-        const NOTE_NAME: &str = ".note.ABI-tag";
+    pub fn inject(&mut self, buf: Vec<u8>, new_addr: u64, section: &str) -> Vec<u8> {
+        let target_section: &str = section;
 
         let bytes: Vec<u8> = self.into();
         let file_off = bytes.len() as u64;
@@ -158,7 +158,7 @@ impl Elf64Binary {
 
         let note_section = self.section_headers
             .iter_mut()
-            .find(|s| s.sh_name.name == NOTE_NAME)
+            .find(|s| s.sh_name.name == target_section)
             .map(|s| s);
 
         let note_offset = if let Some(section) = note_section {
@@ -176,7 +176,7 @@ impl Elf64Binary {
 
             note_offset
         } else {
-            println!("{} not found", NOTE_NAME);
+            println!("{} not found", target_section);
             return Vec::new();
         };        
 
